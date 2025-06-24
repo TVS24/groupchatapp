@@ -1,5 +1,6 @@
 package com.chat.chatapp.config;
 
+import com.chat.chatapp.chat.ActiveUsers;
 import com.chat.chatapp.chat.ChatMessage;
 import com.chat.chatapp.chat.MessageType;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +18,10 @@ import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 @Slf4j
 public class WebSocketEventListener {
 
+    private final ActiveUsers activeUsers;
     private final SimpMessageSendingOperations messageTemplate;
+
+
     @EventListener
     public void handleWebSocketDisconnectListener(SessionDisconnectEvent event){
 
@@ -31,8 +35,16 @@ public class WebSocketEventListener {
                     .sender(username)
                     .build();
 
-            messageTemplate.convertAndSend("/chat/topic",chatMessage);
+            messageTemplate.convertAndSend("/topic/public",chatMessage);
+            //tracking of active users
+            activeUsers.removeUser(username);
+            System.out.println("USER DISCONNECTED : " + username);
 
+            ChatMessage countUpdate = ChatMessage.builder()
+                                    .type(MessageType.USER_COUNT_UPDATE)
+                                    .userCount(activeUsers.getUsers().size())
+                                    .build();
+            messageTemplate.convertAndSend("/topic/public",countUpdate);
 
         }
     }

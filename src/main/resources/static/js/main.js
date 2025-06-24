@@ -1,5 +1,7 @@
 'use strict';
 
+//const { createElement } = require("react");
+
 var usernamePage = document.querySelector('#username-page');
 var chatPage = document.querySelector('#chat-page');
 var usernameForm = document.querySelector('#usernameForm');
@@ -23,11 +25,19 @@ function connect(event) {
         usernamePage.classList.add('hidden');
         chatPage.classList.remove('hidden');
 
+        //setTimeout(..., 100) gives the browser time to reflow and attach the elements before we update textContent.
+        setTimeout(() => {
+
+            document.getElementById('current-user-display').textContent=`Logged In as: ${username}`;
+
+        },100);
+
         var socket = new SockJS('/ws');
         stompClient = Stomp.over(socket);
 
         stompClient.connect({}, onConnected, onError);
     }
+    
     event.preventDefault();
 }
 
@@ -41,7 +51,6 @@ function onConnected() {
         {},
         JSON.stringify({sender: username, type: 'JOIN'})
     )
-
     connectingElement.classList.add('hidden');
 }
 
@@ -69,15 +78,30 @@ function sendMessage(event) {
 
 function onMessageReceived(payload) {
     var message = JSON.parse(payload.body);
+    console.log("received:",payload.body);
 
     var messageElement = document.createElement('li');
 
     if(message.type === 'JOIN') {
         messageElement.classList.add('event-message');
+        //messageElement.textContent=`${message.sender} JOINED`;
         message.content = message.sender + ' joined!';
-    } else if (message.type === 'LEAVE') {
+        console.log("Joined : ",message.sender);
+
+        console.log("Updating active users:",message.userCount);
+        document.getElementById('usercount').textContent=`Active Users: ${message.userCount}`;
+
+    }
+     else if (message.type === 'USER_COUNT_UPDATE'){
+        console.log("Updating active users:",message.userCount);
+        document.getElementById('usercount').textContent=`Active Users: ${message.userCount}`;
+        
+    }
+   
+    else if (message.type === 'LEAVE') {
         messageElement.classList.add('event-message');
         message.content = message.sender + ' left!';
+        console.log("User disconnected : ",message.sender);
     } else {
         messageElement.classList.add('chat-message');
 

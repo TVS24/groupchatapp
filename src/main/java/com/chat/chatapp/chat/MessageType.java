@@ -6,6 +6,8 @@ public enum MessageType {
 
     JOIN,
 
-    LEAVE
+    LEAVE,
+
+    USER_COUNT_UPDATE
 }
 

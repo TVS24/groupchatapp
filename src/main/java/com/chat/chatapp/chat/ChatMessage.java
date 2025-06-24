@@ -16,6 +16,8 @@ public class ChatMessage {
 
     private MessageType type;
 
+    private Integer userCount;
+
 //    public String getContent() {
 //        return content;
 //    }
